@@ -1,7 +1,10 @@
 from datetime import datetime, timedelta
+import time
+from copy import deepcopy
 
 from creditagricole_particuliers import Authenticator, Accounts
 from constant import *
+
 
 class CreditAgricoleClient:
     def __init__(self, logger):
@@ -60,19 +63,44 @@ class CreditAgricoleClient:
                 accounts.append(account)
         return accounts
 
-    def get_transactions(self, account_id):
-        account = Accounts(session=self.session).search(num=account_id)
-
+    def get_transactions(self, account):
         current_date = datetime.today()
         previous_date = current_date - timedelta(days=int(self.get_transactions_period))
         date_stop_ = current_date.strftime("%Y-%m-%d")
         date_start_ = previous_date.strftime("%Y-%m-%d")
 
-        return [
+        max_transactions: int = int(self.max_transactions)
+
+        new_transactions = [
             op.descr
             for op in account.get_operations(
-                count=int(self.max_transactions),
+                count=max_transactions,
                 date_start=date_start_,
                 date_stop=date_stop_,
             )
         ]
+        transactions = []
+        while len(new_transactions) == max_transactions:
+            last_operation_date = new_transactions[-1]["dateOperation"]
+            transactions.extend(
+                [
+                    transaction
+                    for transaction in new_transactions
+                    # Removing the last day to avoid duplicates
+                    if transaction["dateOperation"] != last_operation_date
+                ]
+            )
+            datetime_stop_ = time.mktime(
+                time.strptime(last_operation_date, "%b %d, %Y, %H:%M:%S %p")
+            )
+            date_stop_ = time.strftime("%Y-%m-%d", time.gmtime(datetime_stop_))
+            new_transactions = [
+                op.descr
+                for op in account.get_operations(
+                    count=max_transactions,
+                    date_start=date_start_,
+                    date_stop=date_stop_,
+                )
+            ]
+        transactions.extend(new_transactions)
+        return transactions
