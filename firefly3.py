@@ -207,7 +207,6 @@ class Firefly3Transactions:
         if self.f3_cli.auto_detect_transfers and is_in_list(
             self.f3_cli.transfer_source_transaction, transaction_name
         ):
-
             key = transaction["date"]
             if key not in self.transfer_out:
                 self.transfer_out[key] = []
@@ -216,7 +215,6 @@ class Firefly3Transactions:
         elif self.f3_cli.auto_detect_transfers and is_in_list(
             self.f3_cli.transfer_destination_transaction, transaction_name
         ):
-
             key = transaction["date"]
             if key not in self.transfer_in:
                 self.transfer_in[key] = []

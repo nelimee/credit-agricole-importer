@@ -7,7 +7,6 @@ import requests
 
 
 class CreditAgricoleClient:
-
     def __init__(self, logger):
         self.logger = logger
         self.region = BANK_REGION_DEFAULT
@@ -23,27 +22,46 @@ class CreditAgricoleClient:
             self.logger.error("Please set your bank account region.")
         if self.region not in CreditAgricoleRegion.REGIONS.keys():
             self.logger.error("This bank account region doesn't exist.")
-        if not self.account_id.isdigit() or len(self.account_id) != len(BANK_ACCOUNT_ID_DEFAULT) or self.account_id == BANK_ACCOUNT_ID_DEFAULT:
+        if (
+            not self.account_id.isdigit()
+            or len(self.account_id) != len(BANK_ACCOUNT_ID_DEFAULT)
+            or self.account_id == BANK_ACCOUNT_ID_DEFAULT
+        ):
             self.logger.error("Your bank account ID must be a 11 long digit.")
-        if not self.password.isdigit() or len(self.password) != len(BANK_PASSWORD_DEFAULT) or self.password == BANK_PASSWORD_DEFAULT:
+        if (
+            not self.password.isdigit()
+            or len(self.password) != len(BANK_PASSWORD_DEFAULT)
+            or self.password == BANK_PASSWORD_DEFAULT
+        ):
             self.logger.error("Your bank password must be a 6 long digit.")
         if self.enabled_accounts == IMPORT_ACCOUNT_ID_LIST_DEFAULT:
             self.logger.error("Please set your account ID list to import.")
-        if not self.get_transactions_period.isdigit() or int(self.get_transactions_period) < 0:
-            self.logger.error("Your transactions's get period must be a positive number.")
+        if (
+            not self.get_transactions_period.isdigit()
+            or int(self.get_transactions_period) < 0
+        ):
+            self.logger.error(
+                "Your transactions's get period must be a positive number."
+            )
         if not self.max_transactions.isdigit() or int(self.max_transactions) < 0:
-            self.logger.error("The maximum number of transactions to get must be a positive number.")
+            self.logger.error(
+                "The maximum number of transactions to get must be a positive number."
+            )
 
     def init_session(self):
         password_list = []
         for i in range(len(self.password)):
             password_list.append(int(self.password[i]))
-        self.session = Authenticator(username=self.account_id, password=password_list, region=self.region)
+        self.session = Authenticator(
+            username=self.account_id, password=password_list, region=self.region
+        )
 
     def get_accounts(self):
         accounts = []
         for account in Accounts(session=self.session):
-            if account.numeroCompte in [x.strip() for x in self.enabled_accounts.split(",")]:
+            if account.numeroCompte in [
+                x.strip() for x in self.enabled_accounts.split(",")
+            ]:
                 accounts.append(account)
         return accounts
 
@@ -52,14 +70,20 @@ class CreditAgricoleClient:
 
         current_date = datetime.today()
         previous_date = current_date - timedelta(days=int(self.get_transactions_period))
-        date_stop_ = current_date.strftime('%Y-%m-%d')
-        date_start_ = previous_date.strftime('%Y-%m-%d')
+        date_stop_ = current_date.strftime("%Y-%m-%d")
+        date_start_ = previous_date.strftime("%Y-%m-%d")
 
-        return [op.descr for op in account.get_operations(count=int(self.max_transactions), date_start=date_start_, date_stop=date_stop_)]
+        return [
+            op.descr
+            for op in account.get_operations(
+                count=int(self.max_transactions),
+                date_start=date_start_,
+                date_stop=date_stop_,
+            )
+        ]
 
 
 class CreditAgricoleRegion:
-
     REGIONS = {
         "alpesprovence": "Alpes Provence",
         "alsace-vosges": "Alsace Vosges",
@@ -112,8 +136,12 @@ class CreditAgricoleRegion:
 
         # Find the bank region location
         address = "Credit Agricole " + self.name + ", France"
-        url = 'https://nominatim.openstreetmap.org/search/' + urllib.parse.quote(address) +'?format=json'
+        url = (
+            "https://nominatim.openstreetmap.org/search/"
+            + urllib.parse.quote(address)
+            + "?format=json"
+        )
         response = requests.get(url).json()
         if len(response) > 0 and "lon" in response[0] and "lat" in response[0]:
-            self.longitude = str(response[0]['lon'])
-            self.latitude = str(response[0]['lat'])
+            self.longitude = str(response[0]["lon"])
+            self.latitude = str(response[0]["lat"])
