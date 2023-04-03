@@ -52,3 +52,5 @@ wheels/
 *.egg
 
 logs/
+.dir-locals.el
+config.ini
