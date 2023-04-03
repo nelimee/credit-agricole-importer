@@ -1,4 +1,3 @@
-from creditagricole import CreditAgricoleRegion
 from tool import *
 import requests
 import time
@@ -127,7 +126,7 @@ class Firefly3Client:
     def get_accounts(self, account_type="asset"):
         return self._get(_ACCOUNTS_ENDPOINT, params={"type": account_type}).get("data")
 
-    def create_account(self, name, region, account_number, family_code):
+    def create_account(self, name, account_number, family_code):
         payload = {
             "name": self.name_format.replace(BANK_ACCOUNT_NAME_PLACEHOLDER, name),
             "type": "asset",
@@ -139,12 +138,6 @@ class Firefly3Client:
             payload["account_role"] = "defaultAsset"
         elif family_code == "3":
             payload["account_role"] = "savingAsset"
-
-        ca_region = CreditAgricoleRegion(region)
-        if ca_region.latitude is not None and ca_region.longitude is not None:
-            payload["latitude"] = ca_region.latitude
-            payload["longitude"] = ca_region.longitude
-            payload["zoom_level"] = 6
 
         return self._post(endpoint=_ACCOUNTS_ENDPOINT, payload=payload)
 

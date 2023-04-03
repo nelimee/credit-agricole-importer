@@ -25,7 +25,9 @@ if __name__ == "__main__":
         )
 
         config.add_section(CREDIT_AGRICOLE_SECTION)
-        config.set(CREDIT_AGRICOLE_SECTION, BANK_REGION_FIELD, BANK_REGION_DEFAULT)
+        config.set(
+            CREDIT_AGRICOLE_SECTION, BANK_DEPARTMENT_FIELD, BANK_DEPARTMENT_DEFAULT
+        )
         config.set(
             CREDIT_AGRICOLE_SECTION, BANK_ACCOUNT_ID_FIELD, BANK_ACCOUNT_ID_DEFAULT
         )
@@ -103,8 +105,8 @@ if __name__ == "__main__":
 
         # Init CreditAgricole instance
         ca_cli = CreditAgricoleClient(logger)
-        ca_cli.region = credit_agricole_section.get(
-            BANK_REGION_FIELD, BANK_REGION_DEFAULT
+        ca_cli.department = credit_agricole_section.get(
+            BANK_DEPARTMENT_FIELD, BANK_DEPARTMENT_DEFAULT
         )
         ca_cli.account_id = credit_agricole_section.get(
             BANK_ACCOUNT_ID_FIELD, BANK_ACCOUNT_ID_DEFAULT
@@ -192,7 +194,9 @@ if __name__ == "__main__":
                     continue
 
                 account_id = f3_cli.create_account(
-                    name, ca_cli.region, account.numeroCompte, account.grandeFamilleCode
+                    name,
+                    account.numeroCompte,
+                    account.grandeFamilleCode,
                 ).get("data")["id"]
                 logger.log("Done!")
             else:

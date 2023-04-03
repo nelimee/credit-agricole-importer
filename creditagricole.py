@@ -2,14 +2,11 @@ from datetime import datetime, timedelta
 
 from creditagricole_particuliers import Authenticator, Accounts
 from constant import *
-import urllib.parse
-import requests
-
 
 class CreditAgricoleClient:
     def __init__(self, logger):
         self.logger = logger
-        self.region = BANK_REGION_DEFAULT
+        self.department = BANK_DEPARTMENT_DEFAULT
         self.account_id = BANK_ACCOUNT_ID_DEFAULT
         self.password = BANK_PASSWORD_DEFAULT
         self.enabled_accounts = IMPORT_ACCOUNT_ID_LIST_DEFAULT
@@ -18,10 +15,8 @@ class CreditAgricoleClient:
         self.session = None
 
     def validate(self):
-        if self.region == BANK_REGION_DEFAULT:
-            self.logger.error("Please set your bank account region.")
-        if self.region not in CreditAgricoleRegion.REGIONS.keys():
-            self.logger.error("This bank account region doesn't exist.")
+        if self.department == BANK_DEPARTMENT_DEFAULT:
+            self.logger.error("Please set your bank account department.")
         if (
             not self.account_id.isdigit()
             or len(self.account_id) != len(BANK_ACCOUNT_ID_DEFAULT)
@@ -53,7 +48,7 @@ class CreditAgricoleClient:
         for i in range(len(self.password)):
             password_list.append(int(self.password[i]))
         self.session = Authenticator(
-            username=self.account_id, password=password_list, region=self.region
+            username=self.account_id, password=password_list, department=self.department
         )
 
     def get_accounts(self):
@@ -81,67 +76,3 @@ class CreditAgricoleClient:
                 date_stop=date_stop_,
             )
         ]
-
-
-class CreditAgricoleRegion:
-    REGIONS = {
-        "alpesprovence": "Alpes Provence",
-        "alsace-vosges": "Alsace Vosges",
-        "anjou-maine": "Anjou Maine",
-        "aquitaine": "Aquitaine",
-        "atlantique-vendee": "Atlantique Vendée",
-        "briepicardie": "Brie Picardie",
-        "centrest": "Centre Est",
-        "centrefrance": "Centre France",
-        "centreloire": "Centre Loire",
-        "centreouest": "Centre Ouest",
-        "cb": "Champagne Bourgogne",
-        "cmds": "Charente Maritime Deux-Sèvres",
-        "charente-perigord": "Charente Périgord",
-        "corse": "Corse",
-        "cotesdarmor": "Côtes d'Armor",
-        "des-savoie": "Des Savoie",
-        "finistere": "Finistère",
-        "franchecomte": "Franche Comté",
-        "guadeloupe": "Guadeloupe",
-        "illeetvilaine": "Ille et Vilaine",
-        "languedoc": "Languedoc",
-        "loirehauteloire": "Loire Haute-Loire",
-        "lorraine": "Lorraine",
-        "martinique": "Martinique",
-        "morbihan": "Morbihan",
-        "norddefrance": "Nord de France",
-        "nord-est": "Nord Est",
-        "nmp": "Nord Midi Pyrénées",
-        "normandie": "Normandie",
-        "normandie-seine": "Normandie Seine",
-        "paris": "Paris",
-        "pca": "Provence Côte d'Azur",
-        "pyrenees-gascogne": "Pyrénées Gascogne",
-        "reunion": "Réunion",
-        "sudmed": "Sud Méditerranée",
-        "sudrhonealpes": "Sud Rhône Alpes",
-        "toulouse31": "Toulouse",
-        "tourainepoitou": "Touraine Poitou",
-        "valdefrance": "Val de France",
-    }
-
-    def __init__(self, region_id):
-        if region_id not in self.REGIONS.keys():
-            raise ValueError("This Credit Agricole region doesn't exist.")
-
-        self.name = self.REGIONS[region_id]
-        self.longitude = None
-        self.latitude = None
-
-        # Find the bank region location
-        address = "Credit Agricole " + self.name + ", France"
-        url = (
-            "https://nominatim.openstreetmap.org/search/"
-            + urllib.parse.quote(address)
-            + "?format=json"
-        )
-        response = requests.get(url).json()
-        if len(response) > 0 and "lon" in response[0] and "lat" in response[0]:
-            self.longitude = str(response[0]["lon"])
-            self.latitude = str(response[0]["lat"])
