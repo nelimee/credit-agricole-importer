@@ -12,4 +12,4 @@ COPY ./ /app/
 RUN python -m pip install -r requirements.txt
 
 # The main.py execution is done in the crontab
-CMD ["crond", "-f", "-L", "/dev/stdout"]
+CMD ["cron", "-f", "-L", "/dev/stdout"]
