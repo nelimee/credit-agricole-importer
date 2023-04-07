@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.11-slim-buster
 
 # cron related commands
 RUN apt-get update && apt-get -y install cron
