@@ -1,3 +1,4 @@
+from typing import Any, Dict, List, Literal, Optional
 from tool import *
 import requests
 import time
@@ -8,6 +9,30 @@ from constant import *
 _TRANSACTIONS_ENDPOINT = "api/v1/transactions"
 _ACCOUNTS_ENDPOINT = "api/v1/accounts"
 _BUDGETS_ENDPOINT = "api/v1/budgets"
+
+_ACCOUNT_TYPES = Literal[
+    "all",
+    "asset",
+    "cash",
+    "expense",
+    "revenue",
+    "special",
+    "hidden",
+    "liability",
+    "liabilities",
+    "Default account",
+    "Cash account",
+    "Asset account",
+    "Expense account",
+    "Revenue account",
+    "Initial balance account",
+    "Beneficiary account",
+    "Import account",
+    "Reconciliation account",
+    "Loan",
+    "Debt",
+    "Mortgage",
+]
 
 
 class Firefly3Client:
@@ -117,14 +142,30 @@ class Firefly3Client:
         return "-1"
 
     def get_account_id(self, account_number):
-        accounts = self._get(_ACCOUNTS_ENDPOINT).get("data")
+        accounts = self.get_accounts()
         for account in accounts:
             if account["attributes"]["account_number"] == account_number:
                 return account["id"]
         return "-1"
 
-    def get_accounts(self, account_type="asset"):
-        return self._get(_ACCOUNTS_ENDPOINT, params={"type": account_type}).get("data")
+    def get_accounts(self, account_type: Optional[_ACCOUNT_TYPES] = None):
+        parameters: Dict[str, Any] = {"page": 1}
+        if account_type is not None:
+            parameters["type"] = account_type
+
+        answer = self._get(_ACCOUNTS_ENDPOINT, params=parameters)
+        accounts: List = answer.get("data")
+        pagination = answer.get("meta").get("pagination", {})
+        current_page: int = int(pagination.get("current_page", 1))
+        total_pages: int = int(pagination.get("total_pages", 1))
+        while current_page < total_pages:
+            parameters["page"] += 1
+            answer = self._get(_ACCOUNTS_ENDPOINT, params=parameters)
+            accounts.extend(answer.get("data"))
+            current_page = int(
+                answer.get("meta").get("pagination", {}).get("current_page")
+            )
+        return accounts
 
     def create_account(self, name, account_number, family_code):
         payload = {
